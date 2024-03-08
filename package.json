@@ -125,9 +125,6 @@
     ],
     "*.{yaml,yml,json,md,html}": [
       "prettier --write"
-    ],
-    "*.{json,js,jsx,ts,tsx}": [
-      "bash -c \"yarn translate --fail-on-update\""
     ]
   },
   "repository": {

@@ -15,22 +15,29 @@
  */
 
 import {
+  Box,
+  Button,
   FormControl,
   FormControlLabel,
   FormLabel,
   Radio,
   RadioGroup,
+  TextField,
 } from '@mui/material';
 import { unstable_useId as useId } from '@mui/utils';
 import { t } from 'i18next';
-import { ChangeEvent, Dispatch, useCallback, useEffect } from 'react';
+import { ChangeEvent, Dispatch, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IPollAnswer } from '../../model';
 
 enum AnswerType {
   YesNoAbstain = 'YesNoAbstain',
   YesNo = 'YesNo',
+  Custom = 'Custom',
 }
+
+const customAnswers: Array<IPollAnswer> = Array<IPollAnswer>();
+const custom: string = 'test';
 
 export function createAnswer(
   type: AnswerType = AnswerType.YesNoAbstain,
@@ -39,7 +46,7 @@ export function createAnswer(
     case AnswerType.YesNo:
       return [
         {
-          id: '1',
+          id: 'YesNo',
           label: t('pollForm.answer.yes', 'Yes'),
         },
         {
@@ -47,10 +54,12 @@ export function createAnswer(
           label: t('pollForm.answer.no', 'No'),
         },
       ];
+    case AnswerType.Custom:
+      return customAnswers;
     default:
       return [
         {
-          id: '1',
+          id: 'YesNoAbstain',
           label: t('pollForm.answer.yes', 'Yes'),
         },
         {
@@ -73,8 +82,28 @@ export type AnswerTypeFieldProps = {
 export function AnswerTypeField({ value, onChange }: AnswerTypeFieldProps) {
   const { t } = useTranslation();
   const labelId = useId();
-  const answerType =
-    value.length === 2 ? AnswerType.YesNo : AnswerType.YesNoAbstain;
+  let answerType = AnswerType.YesNoAbstain;
+  switch (value[0]?.id) {
+    case 'YesNoAbstain':
+      answerType = AnswerType.YesNoAbstain;
+      break;
+    case 'YesNo':
+      answerType = AnswerType.YesNo;
+      break;
+    default:
+      answerType = AnswerType.Custom;
+  }
+
+  const [Custom, setCustom] = useState(custom ?? 'test');
+  const [isDirty, setIsDirty] = useState(false);
+  const formTitleId = useId();
+  const customId = useId();
+  const CustomError = Custom.length === 0;
+
+  const handleChangeCustom = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setIsDirty(true);
+    setCustom(e.target.value);
+  }, []);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -83,6 +112,13 @@ export function AnswerTypeField({ value, onChange }: AnswerTypeFieldProps) {
     },
     [onChange],
   );
+
+  const addOption = useCallback(() => {
+    customAnswers.push({
+      id: customAnswers?.length.toString() ?? 'Custom',
+      label: Custom,
+    });
+  }, [Custom]);
 
   useEffect(() => {
     if (value.length === 0) {
@@ -112,7 +148,39 @@ export function AnswerTypeField({ value, onChange }: AnswerTypeFieldProps) {
           label={t('pollForm.answerType.yesNo', 'Yes | No')}
           value={AnswerType.YesNo}
         />
+        <FormControlLabel
+          control={<Radio />}
+          label={t('pollForm.answerType.custom', 'Custom')}
+          value={AnswerType.Custom}
+        />
       </RadioGroup>
+      {answerType === AnswerType.Custom && (
+        <Box
+          aria-labelledby={formTitleId}
+          component="form"
+          display="flex"
+          flexWrap="wrap"
+          p={1}
+        >
+          <TextField
+            InputProps={{ required: true }}
+            fullWidth
+            helperText={
+              isDirty &&
+              CustomError &&
+              t('pollForm.titleHelperText', 'A title is required')
+            }
+            id={customId}
+            label={t('pollForm.Custom', 'Custom Answer (required)')}
+            margin="dense"
+            onChange={handleChangeCustom}
+            value={Custom}
+          />
+          <Button fullWidth onClick={addOption} variant="contained">
+            Add
+          </Button>
+        </Box>
+      )}
     </FormControl>
   );
 }

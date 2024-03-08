@@ -85,11 +85,7 @@ export const CreatePollForm = ({
 
   useEffect(() => {
     const isValid =
-      !titleError &&
-      !questionError &&
-      !durationError &&
-      answers.length > 0 &&
-      !descriptionError;
+      !titleError && !questionError && !durationError && !descriptionError;
 
     if (isDirty && isValid) {
       const poll: IPoll = {
